@@ -1,34 +1,20 @@
-// Basic Three.js setup
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('game-canvas') });
-
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
-
-// Add a cube
-const geometry = new THREE.BoxGeometry();
-const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-const cube = new THREE.Mesh(geometry, material);
-scene.add(cube);
-
-camera.position.z = 5;
-
-// Animation loop
-function animate() {
-    requestAnimationFrame(animate);
-
-    cube.rotation.x += 0.01;
-    cube.rotation.y += 0.01;
-
-    renderer.render(scene, camera);
-}
-
-animate();
-
-// Handle window resize
-window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+// Wait for DOM to load
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize game
+    const game = new Game();
+    
+    // Initialize UI
+    const ui = new UI(game);
+    
+    // Show welcome message
+    ui.showMessage('Welcome to Minecraft Web! Click to start playing.', 5000);
+    
+    // Log instructions to console
+    console.log('Minecraft Web started!');
+    console.log('Controls:');
+    console.log('- WASD: Move');
+    console.log('- Space: Jump');
+    console.log('- Left Click: Break block');
+    console.log('- Right Click: Place block');
+    console.log('- 1,2,3: Select block type');
 });
