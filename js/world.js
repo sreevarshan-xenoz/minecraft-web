@@ -87,7 +87,11 @@ class World {
      * Get a block at a specific position
      */
     getBlock(position) {
-        const posKey = `${position.x},${position.y},${position.z}`;
+        // Ensure we're working with integer positions
+        const x = Math.floor(position.x);
+        const y = Math.floor(position.y);
+        const z = Math.floor(position.z);
+        const posKey = `${x},${y},${z}`;
         return this.blocks[posKey];
     }
 
@@ -95,7 +99,11 @@ class World {
      * Check if a position has a block
      */
     hasBlock(position) {
-        const posKey = `${position.x},${position.y},${position.z}`;
+        // Ensure we're working with integer positions
+        const x = Math.floor(position.x);
+        const y = Math.floor(position.y);
+        const z = Math.floor(position.z);
+        const posKey = `${x},${y},${z}`;
         return !!this.blocks[posKey];
     }
 }

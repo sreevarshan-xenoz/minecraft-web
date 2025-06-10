@@ -6,7 +6,7 @@ class Player {
         this.camera = camera;
         this.world = world;
         this.particles = particles;
-        this.position = { x: 0, y: 5, z: 10 }; // Start position above the world
+        this.position = { x: 0, y: 2, z: 0 }; // Start position above the center of the world
         this.velocity = { x: 0, y: 0, z: 0 };
         this.speed = 0.1;
         this.runningSpeed = 0.16; // Speed when running (shift key)
@@ -183,8 +183,13 @@ class Player {
         // Store previous position for collision detection
         const prevPosition = { ...this.position };
         
-        // Apply gravity
-        this.velocity.y -= this.gravity;
+        // Apply gravity only if not on ground
+        if (!this.onGround) {
+            this.velocity.y -= this.gravity;
+        } else if (this.velocity.y < 0) {
+            // Stop falling when on ground
+            this.velocity.y = 0;
+        }
         
         // Handle jumping
         if (this.controls.jump && this.onGround) {
@@ -226,10 +231,15 @@ class Player {
         
         // Update position
         this.position.x += this.velocity.x;
-        this.position.y += this.velocity.y;
-        this.position.z += this.velocity.z;
+        this.position.z += this.velocity.z; // Update X and Z first
         
-        // Check for collisions with blocks and adjust position
+        // Check for horizontal collisions
+        this.handleHorizontalCollisions(prevPosition);
+        
+        // Then update Y position separately
+        this.position.y += this.velocity.y;
+        
+        // Check for vertical collisions
         this.handleCollisions(prevPosition);
         
         // Apply head bobbing effect when moving
@@ -258,6 +268,69 @@ class Player {
     }
     
     /**
+     * Handle horizontal collisions only (X and Z axes)
+     */
+    handleHorizontalCollisions(prevPosition) {
+        const playerBox = {
+            minX: this.position.x - this.width / 2,
+            maxX: this.position.x + this.width / 2,
+            minY: this.position.y - this.height / 2,
+            maxY: this.position.y + this.height / 2,
+            minZ: this.position.z - this.width / 2,
+            maxZ: this.position.z + this.width / 2
+        };
+        
+        // Check blocks in the vicinity of the player
+        const checkRadius = Math.ceil(this.width + 1);
+        
+        for (let x = Math.floor(this.position.x) - checkRadius; x <= Math.floor(this.position.x) + checkRadius; x++) {
+            for (let y = Math.floor(this.position.y) - checkRadius; y <= Math.floor(this.position.y) + checkRadius; y++) {
+                for (let z = Math.floor(this.position.z) - checkRadius; z <= Math.floor(this.position.z) + checkRadius; z++) {
+                    const block = this.world.getBlock({ x, y, z });
+                    if (!block) continue;
+                    
+                    // Simple block collision box
+                    const blockBox = {
+                        minX: x - 0.5,
+                        maxX: x + 0.5,
+                        minY: y - 0.5,
+                        maxY: y + 0.5,
+                        minZ: z - 0.5,
+                        maxZ: z + 0.5
+                    };
+                    
+                    // Check for collision
+                    if (this.boxIntersect(playerBox, blockBox)) {
+                        // X-axis collision
+                        if (prevPosition.x < blockBox.minX) {
+                            this.position.x = blockBox.minX - this.width / 2;
+                            this.velocity.x = 0;
+                        } else if (prevPosition.x > blockBox.maxX) {
+                            this.position.x = blockBox.maxX + this.width / 2;
+                            this.velocity.x = 0;
+                        }
+                        
+                        // Update player box after X resolution
+                        playerBox.minX = this.position.x - this.width / 2;
+                        playerBox.maxX = this.position.x + this.width / 2;
+                        
+                        // Z-axis collision
+                        if (this.boxIntersect(playerBox, blockBox)) {
+                            if (prevPosition.z < blockBox.minZ) {
+                                this.position.z = blockBox.minZ - this.width / 2;
+                                this.velocity.z = 0;
+                            } else if (prevPosition.z > blockBox.maxZ) {
+                                this.position.z = blockBox.maxZ + this.width / 2;
+                                this.velocity.z = 0;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
      * Handle collisions with blocks
      */
     handleCollisions(prevPosition) {
@@ -275,6 +348,22 @@ class Player {
         const checkRadius = Math.ceil(this.width + 1);
         this.onGround = false;
         
+        // First check if player is directly on ground
+        const groundCheckPos = {
+            x: Math.floor(this.position.x),
+            y: Math.floor(this.position.y - this.height / 2 - 0.01), // Just below feet
+            z: Math.floor(this.position.z)
+        };
+        
+        const blockBelowPlayer = this.world.getBlock(groundCheckPos);
+        if (blockBelowPlayer) {
+            this.onGround = true;
+            // Ensure player is exactly on top of the block
+            this.position.y = Math.floor(this.position.y - this.height / 2) + 0.5 + this.height / 2;
+            this.velocity.y = 0;
+        }
+        
+        // Now check for other collisions
         for (let x = Math.floor(this.position.x) - checkRadius; x <= Math.floor(this.position.x) + checkRadius; x++) {
             for (let y = Math.floor(this.position.y) - checkRadius; y <= Math.floor(this.position.y) + checkRadius; y++) {
                 for (let z = Math.floor(this.position.z) - checkRadius; z <= Math.floor(this.position.z) + checkRadius; z++) {
@@ -527,16 +616,10 @@ class Player {
             
             if (!hit) return false;
             
-            // Calculate position adjacent to the hit block
-            // This is a simplified approach - a more accurate one would determine which face was hit
-            const angle = this.camera.rotation.y;
-            const dx = -Math.sin(angle);
-            const dz = -Math.cos(angle);
-            
-            // Simple approach: place block in front of the hit block
-            const x = hit.position.x + Math.round(dx);
-            const y = hit.position.y;
-            const z = hit.position.z + Math.round(dz);
+            // Calculate position adjacent to the hit block using the face normal
+            const x = hit.position.x + hit.normal.x;
+            const y = hit.position.y + hit.normal.y;
+            const z = hit.position.z + hit.normal.z;
             
             // Check if position is valid (not inside player)
             const playerBox = {
