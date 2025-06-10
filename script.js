@@ -3,11 +3,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize game
     const game = new Game();
     
+    // Make game instance globally available
+    window.game = game;
+    
     // Initialize UI
     const ui = new UI(game);
     
-    // Show welcome message
-    ui.showMessage('Welcome to Minecraft Web! Click to start playing.', 5000);
+    // Game is not automatically started now - user must click "Start Game" button
     
     // Log instructions to console
     console.log('Minecraft Web started!');
@@ -17,4 +19,5 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('- Left Click: Break block');
     console.log('- Right Click: Place block');
     console.log('- 1,2,3: Select block type');
+    console.log('- ESC: Pause game');
 });

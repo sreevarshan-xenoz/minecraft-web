@@ -15,10 +15,15 @@ class Game {
         this.skybox = null;
         this.water = null;
         this.particles = null;
+        this.ui = null;
         
         // Game state
         this.isRunning = false;
         this.selectedBlockType = 'grass';
+        this.settings = {
+            renderDistance: 5,
+            mouseSensitivity: 0.002
+        };
         
         // Initialize the game
         this.init();
@@ -72,6 +77,9 @@ class Game {
         // Create player
         this.player = new Player(this.camera, this.world, this.particles);
         
+        // Create UI
+        this.ui = new UI(this);
+        
         // Set up event listeners
         this.setupEventListeners();
         
@@ -103,9 +111,15 @@ class Game {
             // Only handle if pointer is locked
             if (document.pointerLockElement) {
                 if (event.button === 0) { // Left click - remove block
-                    this.player.removeBlock();
+                    const success = this.player.removeBlock();
+                    if (success) {
+                        this.ui.showMessage('Block removed!', 1000);
+                    }
                 } else if (event.button === 2) { // Right click - place block
-                    this.player.placeBlock(this.selectedBlockType);
+                    const success = this.player.placeBlock(this.selectedBlockType);
+                    if (success) {
+                        this.ui.showMessage(`Placed ${this.selectedBlockType} block!`, 1000);
+                    }
                 }
             }
         });
@@ -120,14 +134,29 @@ class Game {
             switch(event.key) {
                 case '1':
                     this.selectedBlockType = 'grass';
+                    this.ui.updateBlockSelector();
+                    this.ui.showMessage('Selected: Grass', 1000);
                     break;
                 case '2':
                     this.selectedBlockType = 'dirt';
+                    this.ui.updateBlockSelector();
+                    this.ui.showMessage('Selected: Dirt', 1000);
                     break;
                 case '3':
                     this.selectedBlockType = 'stone';
+                    this.ui.updateBlockSelector();
+                    this.ui.showMessage('Selected: Stone', 1000);
                     break;
             }
+        });
+        
+        // Listen for settings changes
+        document.getElementById('render-distance')?.addEventListener('change', (event) => {
+            this.settings.renderDistance = parseInt(event.target.value);
+        });
+        
+        document.getElementById('mouse-sensitivity')?.addEventListener('change', (event) => {
+            this.settings.mouseSensitivity = parseInt(event.target.value) * 0.0004;
         });
     }
 
@@ -162,6 +191,11 @@ class Game {
         // Update particles
         if (this.particles) {
             this.particles.update();
+        }
+        
+        // Update UI
+        if (this.ui) {
+            this.ui.updateHUD(this.player.position);
         }
         
         // Render scene

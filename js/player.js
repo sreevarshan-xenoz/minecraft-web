@@ -88,11 +88,14 @@ class Player {
         document.addEventListener('mousemove', (event) => {
             // Only rotate camera if mouse is locked (pointer lock API)
             if (document.pointerLockElement) {
+                // Get mouse sensitivity from game settings if available
+                const sensitivity = window.game?.settings?.mouseSensitivity || 0.002;
+                
                 // Rotate camera based on mouse movement
-                this.camera.rotation.y -= event.movementX * 0.002;
+                this.camera.rotation.y -= event.movementX * sensitivity;
                 
                 // Limit vertical rotation to prevent camera flipping
-                const verticalRotation = this.camera.rotation.x - event.movementY * 0.002;
+                const verticalRotation = this.camera.rotation.x - event.movementY * sensitivity;
                 this.camera.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, verticalRotation));
             }
         });
