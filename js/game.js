@@ -70,7 +70,7 @@ class Game {
         this.world.generateFlatWorld();
         
         // Create player
-        this.player = new Player(this.camera, this.world);
+        this.player = new Player(this.camera, this.world, this.particles);
         
         // Set up event listeners
         this.setupEventListeners();

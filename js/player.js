@@ -109,6 +109,9 @@ class Player {
      * Update player position based on controls and physics
      */
     update() {
+        // Store previous position for collision detection
+        const prevY = this.position.y;
+        
         // Apply gravity
         this.velocity.y -= this.gravity;
         
@@ -144,6 +147,21 @@ class Player {
         
         // Update camera position
         this.updateCameraPosition();
+        
+        // Check for water interaction (assuming water level is at -0.5)
+        const waterLevel = -0.5;
+        const wasAboveWater = prevY > waterLevel;
+        const isInWater = this.position.y <= waterLevel;
+        
+        // Create splash when entering water
+        if (wasAboveWater && isInWater && this.particles) {
+            const splashPos = new THREE.Vector3(
+                this.position.x,
+                waterLevel,
+                this.position.z
+            );
+            this.particles.createSplashParticles(splashPos);
+        }
         
         // Create footstep particles when moving on ground
         if (this.isMoving && this.onGround && this.particles) {
