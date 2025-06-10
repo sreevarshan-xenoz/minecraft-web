@@ -84,6 +84,12 @@ class UI {
      * Create settings menu
      */
     createSettingsMenu() {
+        // Check if settings menu already exists and remove it if it does
+        const existingMenu = this.gameMenu.querySelector('.settings-menu');
+        if (existingMenu) {
+            existingMenu.remove();
+        }
+        
         // Create settings menu element
         this.settingsMenu = document.createElement('div');
         this.settingsMenu.className = 'settings-menu';
@@ -123,6 +129,9 @@ class UI {
         
         // Add to game menu
         this.gameMenu.querySelector('.menu-content').appendChild(this.settingsMenu);
+        
+        // Hide settings menu initially
+        this.settingsMenu.style.display = 'none';
         
         // Add back button event listener
         this.settingsMenu.querySelector('#back-button').addEventListener('click', () => {
@@ -459,7 +468,7 @@ class UI {
             positionIndicator.innerHTML = `Position: X:${x} Y:${y} Z:${z}`;
         }
     }
-
+    
     /**
      * Show a message to the player
      */

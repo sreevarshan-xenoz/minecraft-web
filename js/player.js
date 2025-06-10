@@ -47,8 +47,8 @@ class Player {
         this.raycaster = new THREE.Raycaster();
         this.maxReach = 5; // Maximum distance to interact with blocks
         
-        // Debug flag - enable for troubleshooting
-        this.debug = true;
+        // Debug flag
+        this.debug = false;
         
         // Initialize player
         this.init();
