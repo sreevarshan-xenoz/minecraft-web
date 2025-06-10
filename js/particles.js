@@ -36,36 +36,55 @@ class Particles {
      * Update all active particles
      */
     update() {
-        // Update each particle
-        for (let i = this.particles.length - 1; i >= 0; i--) {
-            const particle = this.particles[i];
-            
-            // Update lifetime
-            particle.lifetime -= 0.016; // Assuming 60fps
-            
-            // Remove if lifetime is over
-            if (particle.lifetime <= 0) {
-                this.scene.remove(particle.mesh);
-                this.particles.splice(i, 1);
-                continue;
+        try {
+            // Update each particle
+            for (let i = this.particles.length - 1; i >= 0; i--) {
+                try {
+                    const particle = this.particles[i];
+                    
+                    // Skip invalid particles
+                    if (!particle || !particle.mesh) {
+                        this.particles.splice(i, 1);
+                        continue;
+                    }
+                    
+                    // Update lifetime
+                    particle.lifetime -= 0.016; // Assuming 60fps
+                    
+                    // Remove if lifetime is over
+                    if (particle.lifetime <= 0) {
+                        this.scene.remove(particle.mesh);
+                        this.particles.splice(i, 1);
+                        continue;
+                    }
+                    
+                    // Update position based on velocity
+                    particle.mesh.position.x += particle.velocity.x;
+                    particle.mesh.position.y += particle.velocity.y;
+                    particle.mesh.position.z += particle.velocity.z;
+                    
+                    // Apply gravity
+                    particle.velocity.y -= particle.gravity;
+                    
+                    // Scale down as lifetime decreases
+                    const scale = particle.lifetime / particle.maxLifetime;
+                    particle.mesh.scale.set(scale, scale, scale);
+                    
+                    // Rotate for more dynamic effect
+                    particle.mesh.rotation.x += 0.1;
+                    particle.mesh.rotation.y += 0.1;
+                    particle.mesh.rotation.z += 0.1;
+                } catch (particleError) {
+                    console.error('Error updating particle:', particleError);
+                    // Remove problematic particle
+                    if (this.particles[i] && this.particles[i].mesh) {
+                        this.scene.remove(this.particles[i].mesh);
+                    }
+                    this.particles.splice(i, 1);
+                }
             }
-            
-            // Update position based on velocity
-            particle.mesh.position.x += particle.velocity.x;
-            particle.mesh.position.y += particle.velocity.y;
-            particle.mesh.position.z += particle.velocity.z;
-            
-            // Apply gravity
-            particle.velocity.y -= particle.gravity;
-            
-            // Scale down as lifetime decreases
-            const scale = particle.lifetime / particle.maxLifetime;
-            particle.mesh.scale.set(scale, scale, scale);
-            
-            // Rotate for more dynamic effect
-            particle.mesh.rotation.x += 0.1;
-            particle.mesh.rotation.y += 0.1;
-            particle.mesh.rotation.z += 0.1;
+        } catch (error) {
+            console.error('Error in particles update:', error);
         }
     }
 
@@ -88,6 +107,10 @@ class Particles {
             const mesh = new THREE.Mesh(geometry, particleMaterial);
             
             // Set position
+            // Make sure position is a THREE.Vector3
+            if (!(position instanceof THREE.Vector3)) {
+                position = new THREE.Vector3(position.x, position.y, position.z);
+            }
             mesh.position.copy(position);
             
             // Random velocity

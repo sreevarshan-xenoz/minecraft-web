@@ -177,7 +177,7 @@ class Player {
                 };
                 
                 const block = this.world.getBlock(blockPos);
-                const blockType = block ? block.type : 'dirt';
+                const blockType = block && block.type ? block.type : 'dirt';
                 
                 // Create footstep particles
                 const particlePos = new THREE.Vector3(
@@ -186,7 +186,11 @@ class Player {
                     this.position.z
                 );
                 
-                this.particles.createFootstepParticles(particlePos, blockType);
+                try {
+                    this.particles.createFootstepParticles(particlePos, blockType);
+                } catch (error) {
+                    console.error('Error creating footstep particles:', error);
+                }
             }
         }
     }
@@ -202,44 +206,61 @@ class Player {
      * Place a block in the world
      */
     placeBlock(type) {
-        // Calculate position in front of player
-        const distance = 3; // Distance in front of player to place block
-        const angle = this.camera.rotation.y;
-        
-        const x = Math.round(this.position.x - Math.sin(angle) * distance);
-        const y = Math.round(this.position.y - 0.5); // Slightly below eye level
-        const z = Math.round(this.position.z - Math.cos(angle) * distance);
-        
-        // Add block to world
-        this.world.addBlock(type, { x, y, z });
+        try {
+            // Calculate position in front of player
+            const distance = 3; // Distance in front of player to place block
+            const angle = this.camera.rotation.y;
+            
+            const x = Math.round(this.position.x - Math.sin(angle) * distance);
+            const y = Math.round(this.position.y - 0.5); // Slightly below eye level
+            const z = Math.round(this.position.z - Math.cos(angle) * distance);
+            
+            // Add block to world
+            this.world.addBlock(type || 'dirt', { x, y, z });
+            return true;
+        } catch (error) {
+            console.error('Error placing block:', error);
+            return false;
+        }
     }
 
     /**
      * Remove a block from the world
      */
     removeBlock() {
-        // Calculate position in front of player
-        const distance = 3; // Distance in front of player to remove block
-        const angle = this.camera.rotation.y;
-        
-        const x = Math.round(this.position.x - Math.sin(angle) * distance);
-        const y = Math.round(this.position.y - 0.5); // Slightly below eye level
-        const z = Math.round(this.position.z - Math.cos(angle) * distance);
-        
-        const position = { x, y, z };
-        
-        // Get block type before removing
-        const block = this.world.getBlock(position);
-        
-        // Remove block from world
-        const removed = this.world.removeBlock(position);
-        
-        // Create particles if block was removed and particles system exists
-        if (removed && block && this.particles) {
-            const particlePos = new THREE.Vector3(x, y, z);
-            this.particles.createBlockBreakParticles(particlePos, block.type);
+        try {
+            // Calculate position in front of player
+            const distance = 3; // Distance in front of player to remove block
+            const angle = this.camera.rotation.y;
+            
+            const x = Math.round(this.position.x - Math.sin(angle) * distance);
+            const y = Math.round(this.position.y - 0.5); // Slightly below eye level
+            const z = Math.round(this.position.z - Math.cos(angle) * distance);
+            
+            const position = { x, y, z };
+            
+            // Get block type before removing
+            const block = this.world.getBlock(position);
+            
+            // Remove block from world
+            const removed = this.world.removeBlock(position);
+            
+            // Create particles if block was removed and particles system exists
+            if (removed && block && this.particles) {
+                try {
+                    const particlePos = new THREE.Vector3(x, y, z);
+                    // Make sure we have a valid block type
+                    const blockType = block && block.type ? block.type : 'dirt';
+                    this.particles.createBlockBreakParticles(particlePos, blockType);
+                } catch (particleError) {
+                    console.error('Error creating block break particles:', particleError);
+                }
+            }
+            
+            return removed;
+        } catch (error) {
+            console.error('Error removing block:', error);
+            return false;
         }
-        
-        return removed;
     }
 }
