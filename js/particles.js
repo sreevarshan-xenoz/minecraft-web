@@ -92,45 +92,71 @@ class Particles {
      * Create particles at a specific position with a specific type
      */
     createParticles(position, type, material) {
-        // Get particle properties based on type
-        const properties = this.particleTypes[type] || this.particleTypes.blockBreak;
-        
-        // Create particles
-        for (let i = 0; i < properties.count; i++) {
-            // Create geometry
-            const geometry = new THREE.BoxGeometry(properties.size, properties.size, properties.size);
-            
-            // Use provided material or create a default one
-            const particleMaterial = material || new THREE.MeshBasicMaterial({ color: 0xffffff });
-            
-            // Create mesh
-            const mesh = new THREE.Mesh(geometry, particleMaterial);
-            
-            // Set position
-            // Make sure position is a THREE.Vector3
-            if (!(position instanceof THREE.Vector3)) {
-                position = new THREE.Vector3(position.x, position.y, position.z);
+        try {
+            // Validate inputs
+            if (!position) {
+                console.error('Invalid position for particles');
+                return;
             }
-            mesh.position.copy(position);
             
-            // Random velocity
-            const velocity = {
-                x: (Math.random() - 0.5) * properties.initialVelocity,
-                y: Math.random() * properties.initialVelocity,
-                z: (Math.random() - 0.5) * properties.initialVelocity
-            };
+            if (!this.scene) {
+                console.error('No scene available for particles');
+                return;
+            }
             
-            // Add to scene
-            this.scene.add(mesh);
+            // Get particle properties based on type
+            const properties = this.particleTypes[type] || this.particleTypes.blockBreak;
             
-            // Add to particles array
-            this.particles.push({
-                mesh,
-                velocity,
-                gravity: properties.gravity,
-                lifetime: properties.lifetime,
-                maxLifetime: properties.lifetime
-            });
+            // Create particles
+            for (let i = 0; i < properties.count; i++) {
+                try {
+                    // Create geometry
+                    const geometry = new THREE.BoxGeometry(properties.size, properties.size, properties.size);
+                    
+                    // Use provided material or create a default one
+                    const particleMaterial = material || new THREE.MeshBasicMaterial({ color: 0xffffff });
+                    
+                    // Create mesh
+                    const mesh = new THREE.Mesh(geometry, particleMaterial);
+                    
+                    // Set position
+                    // Make sure position is a THREE.Vector3
+                    let particlePosition;
+                    if (!(position instanceof THREE.Vector3)) {
+                        particlePosition = new THREE.Vector3(
+                            position.x || 0,
+                            position.y || 0,
+                            position.z || 0
+                        );
+                    } else {
+                        particlePosition = position.clone();
+                    }
+                    mesh.position.copy(particlePosition);
+                    
+                    // Random velocity
+                    const velocity = {
+                        x: (Math.random() - 0.5) * properties.initialVelocity,
+                        y: Math.random() * properties.initialVelocity,
+                        z: (Math.random() - 0.5) * properties.initialVelocity
+                    };
+                    
+                    // Add to scene
+                    this.scene.add(mesh);
+                    
+                    // Add to particles array
+                    this.particles.push({
+                        mesh,
+                        velocity,
+                        gravity: properties.gravity,
+                        lifetime: properties.lifetime,
+                        maxLifetime: properties.lifetime
+                    });
+                } catch (particleError) {
+                    console.error('Error creating individual particle:', particleError);
+                }
+            }
+        } catch (error) {
+            console.error('Error creating particles:', error);
         }
     }
 
