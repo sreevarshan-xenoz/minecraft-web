@@ -62,6 +62,8 @@ class World {
 
     /**
      * Remove a block from the world
+     * @param {Object} position - The position of the block to remove
+     * @returns {boolean} - Whether a block was removed
      */
     removeBlock(position) {
         const posKey = `${position.x},${position.y},${position.z}`;
@@ -75,7 +77,6 @@ class World {
             
             // Remove the block from our blocks object
             delete this.blocks[posKey];
-            
             return true;
         }
         

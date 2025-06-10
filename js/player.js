@@ -2,15 +2,19 @@
  * Player class for handling player movement and interaction
  */
 class Player {
-    constructor(camera, world) {
+    constructor(camera, world, particles) {
         this.camera = camera;
         this.world = world;
+        this.particles = particles;
         this.position = { x: 0, y: 5, z: 10 }; // Start position above the world
         this.velocity = { x: 0, y: 0, z: 0 };
         this.speed = 0.1;
         this.jumpForce = 0.2;
         this.gravity = 0.01;
         this.onGround = false;
+        this.isMoving = false;
+        this.lastFootstep = 0;
+        this.footstepInterval = 20; // Frames between footsteps
         this.controls = {
             forward: false,
             backward: false,
@@ -123,6 +127,9 @@ class Player {
         this.velocity.x = (moveX * Math.cos(angle) + moveZ * Math.sin(angle)) * this.speed;
         this.velocity.z = (moveZ * Math.cos(angle) - moveX * Math.sin(angle)) * this.speed;
         
+        // Check if player is moving horizontally
+        this.isMoving = Math.abs(this.velocity.x) > 0.001 || Math.abs(this.velocity.z) > 0.001;
+        
         // Update position
         this.position.x += this.velocity.x;
         this.position.y += this.velocity.y;
@@ -137,6 +144,33 @@ class Player {
         
         // Update camera position
         this.updateCameraPosition();
+        
+        // Create footstep particles when moving on ground
+        if (this.isMoving && this.onGround && this.particles) {
+            this.lastFootstep++;
+            if (this.lastFootstep >= this.footstepInterval) {
+                this.lastFootstep = 0;
+                
+                // Get block type at player's feet
+                const blockPos = {
+                    x: Math.floor(this.position.x),
+                    y: Math.floor(this.position.y - 1), // Block below player
+                    z: Math.floor(this.position.z)
+                };
+                
+                const block = this.world.getBlock(blockPos);
+                const blockType = block ? block.type : 'dirt';
+                
+                // Create footstep particles
+                const particlePos = new THREE.Vector3(
+                    this.position.x,
+                    this.position.y - 0.9, // Just above the ground
+                    this.position.z
+                );
+                
+                this.particles.createFootstepParticles(particlePos, blockType);
+            }
+        }
     }
 
     /**
@@ -174,7 +208,20 @@ class Player {
         const y = Math.round(this.position.y - 0.5); // Slightly below eye level
         const z = Math.round(this.position.z - Math.cos(angle) * distance);
         
+        const position = { x, y, z };
+        
+        // Get block type before removing
+        const block = this.world.getBlock(position);
+        
         // Remove block from world
-        this.world.removeBlock({ x, y, z });
+        const removed = this.world.removeBlock(position);
+        
+        // Create particles if block was removed and particles system exists
+        if (removed && block && this.particles) {
+            const particlePos = new THREE.Vector3(x, y, z);
+            this.particles.createBlockBreakParticles(particlePos, block.type);
+        }
+        
+        return removed;
     }
 }

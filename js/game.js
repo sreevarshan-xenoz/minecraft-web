@@ -12,6 +12,9 @@ class Game {
         // Game components
         this.world = null;
         this.player = null;
+        this.skybox = null;
+        this.water = null;
+        this.particles = null;
         
         // Game state
         this.isRunning = false;
@@ -48,9 +51,20 @@ class Game {
         // Add lighting
         this.setupLighting();
         
+        // Create skybox
+        this.skybox = new Skybox(this.scene);
+        
         // Create world
         this.world = new World();
         this.world.init(this.scene);
+        
+        // Create water
+        this.water = new Water(this.scene);
+        // Set water level to be just below ground level
+        this.water.setWaterLevel(-0.5);
+        
+        // Create particles system
+        this.particles = new Particles(this.scene);
         
         // Generate flat world
         this.world.generateFlatWorld();
@@ -77,10 +91,7 @@ class Game {
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
         this.scene.add(ambientLight);
         
-        // Add directional light (sun)
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        directionalLight.position.set(100, 100, 50);
-        this.scene.add(directionalLight);
+        // Note: The directional light (sun) is now managed by the Skybox class
     }
 
     /**
@@ -137,6 +148,21 @@ class Game {
         
         // Update player
         this.player.update();
+        
+        // Update skybox
+        if (this.skybox) {
+            this.skybox.update();
+        }
+        
+        // Update water
+        if (this.water) {
+            this.water.update();
+        }
+        
+        // Update particles
+        if (this.particles) {
+            this.particles.update();
+        }
         
         // Render scene
         this.renderer.render(this.scene, this.camera);
