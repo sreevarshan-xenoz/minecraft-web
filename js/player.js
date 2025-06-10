@@ -55,6 +55,9 @@ class Player {
      * Initialize the player
      */
     init() {
+        // Reset camera rotation to ensure it starts level
+        this.camera.rotation.set(0, 0, 0);
+        
         // Set initial camera position
         this.updateCameraPosition();
         
@@ -426,7 +429,8 @@ class Player {
             bobbingOffsetY = Math.sin(this.bobbingCycle * 2) * this.bobbingAmount;
             
             // Horizontal bobbing (sine wave with phase offset)
-            bobbingOffsetX = Math.sin(this.bobbingCycle) * this.bobbingAmount * 0.5;
+            // Reduce horizontal bobbing to minimize disorientation
+            bobbingOffsetX = Math.sin(this.bobbingCycle) * this.bobbingAmount * 0.3;
         }
         
         // Set camera position at eye level with bobbing
@@ -435,18 +439,21 @@ class Player {
             this.position.y + (this.eyeLevel - this.height / 2) + bobbingOffsetY,
             this.position.z
         );
+        
+        // Ensure camera stays level (no roll)
+        this.camera.rotation.z = 0;
     }
 
     /**
      * Cast a ray to find block in player's view
      */
     castRay() {
-        // Create ray direction from camera
-        const direction = new THREE.Vector3(0, 0, -1);
-        direction.unproject(this.camera);
-        direction.sub(this.camera.position).normalize();
+        // Create ray direction from camera center
+        const direction = new THREE.Vector3();
+        direction.set(0, 0, -1); // Forward direction in camera space
+        direction.applyQuaternion(this.camera.quaternion); // Transform to world space
         
-        // Set up raycaster
+        // Set up raycaster from camera position in direction of view
         this.raycaster.set(this.camera.position, direction);
         
         // Find intersecting blocks
@@ -479,6 +486,7 @@ class Player {
                         y: Math.floor(blockPos.y),
                         z: Math.floor(blockPos.z)
                     },
+                    normal: this.calculateHitNormal(intersection, blockBox),
                     block
                 });
             }
@@ -488,6 +496,25 @@ class Player {
         intersects.sort((a, b) => a.distance - b.distance);
         
         return intersects.length > 0 ? intersects[0] : null;
+    }
+
+    /**
+     * Calculate which face of the block was hit
+     */
+    calculateHitNormal(hitPoint, blockBox) {
+        // Determine which face was hit by checking which boundary the hit point is closest to
+        const epsilon = 0.001; // Small value to handle floating point precision
+        
+        // Check each face
+        if (Math.abs(hitPoint.x - blockBox.min.x) < epsilon) return { x: -1, y: 0, z: 0 }; // Left face
+        if (Math.abs(hitPoint.x - blockBox.max.x) < epsilon) return { x: 1, y: 0, z: 0 };  // Right face
+        if (Math.abs(hitPoint.y - blockBox.min.y) < epsilon) return { x: 0, y: -1, z: 0 }; // Bottom face
+        if (Math.abs(hitPoint.y - blockBox.max.y) < epsilon) return { x: 0, y: 1, z: 0 };  // Top face
+        if (Math.abs(hitPoint.z - blockBox.min.z) < epsilon) return { x: 0, y: 0, z: -1 }; // Back face
+        if (Math.abs(hitPoint.z - blockBox.max.z) < epsilon) return { x: 0, y: 0, z: 1 };  // Front face
+        
+        // Default to top face if we can't determine (shouldn't happen)
+        return { x: 0, y: 1, z: 0 };
     }
 
     /**
