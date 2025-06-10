@@ -102,6 +102,22 @@ class UI {
                 <input type="range" id="mouse-sensitivity" class="settings-slider" min="1" max="10" value="5">
             </div>
             
+            <div class="settings-group">
+                <label class="settings-label">Mouse Smoothing</label>
+                <div class="toggle-container">
+                    <input type="checkbox" id="mouse-smoothing" class="settings-toggle" checked>
+                    <label for="mouse-smoothing" class="toggle-label"></label>
+                </div>
+            </div>
+            
+            <div class="settings-group">
+                <label class="settings-label">Head Bobbing</label>
+                <div class="toggle-container">
+                    <input type="checkbox" id="head-bobbing" class="settings-toggle" checked>
+                    <label for="head-bobbing" class="toggle-label"></label>
+                </div>
+            </div>
+            
             <button id="back-button" class="menu-button back-button">Back</button>
         `;
         
@@ -111,6 +127,19 @@ class UI {
         // Add back button event listener
         this.settingsMenu.querySelector('#back-button').addEventListener('click', () => {
             this.hideSettingsMenu();
+        });
+        
+        // Add toggle event listeners
+        this.settingsMenu.querySelector('#mouse-smoothing').addEventListener('change', (e) => {
+            if (window.game && window.game.player) {
+                window.game.player.mouseLookSmoothing = e.target.checked;
+            }
+        });
+        
+        this.settingsMenu.querySelector('#head-bobbing').addEventListener('change', (e) => {
+            if (window.game && window.game.player) {
+                window.game.player.enableBobbing = e.target.checked;
+            }
         });
     }
     
@@ -234,6 +263,7 @@ class UI {
             <h3>Controls</h3>
             <ul>
                 <li><strong>W, A, S, D</strong> - Move</li>
+                <li><strong>Shift</strong> - Run</li>
                 <li><strong>Space</strong> - Jump</li>
                 <li><strong>Left Click</strong> - Break block</li>
                 <li><strong>Right Click</strong> - Place block</li>
