@@ -6,7 +6,7 @@ class Player {
         this.camera = camera;
         this.world = world;
         this.particles = particles;
-        this.position = { x: 0, y: 2, z: 0 }; // Start position above the center of the world
+        this.position = { x: 0, y: 3, z: 0 }; // Start position higher above the world to ensure we don't start inside a block
         this.velocity = { x: 0, y: 0, z: 0 };
         this.speed = 0.1;
         this.runningSpeed = 0.16; // Speed when running (shift key)
@@ -47,6 +47,9 @@ class Player {
         this.raycaster = new THREE.Raycaster();
         this.maxReach = 5; // Maximum distance to interact with blocks
         
+        // Debug flag - enable for troubleshooting
+        this.debug = true;
+        
         // Initialize player
         this.init();
     }
@@ -63,6 +66,11 @@ class Player {
         
         // Set up keyboard controls
         this.setupControls();
+        
+        // Log initial position for debugging
+        if (this.debug) {
+            console.log("Initial player position:", this.position);
+        }
     }
 
     /**
@@ -71,25 +79,36 @@ class Player {
     setupControls() {
         // Key down event
         document.addEventListener('keydown', (event) => {
+            // Prevent default behavior for game controls
+            if (['w', 'a', 's', 'd', ' ', 'shift'].includes(event.key.toLowerCase())) {
+                event.preventDefault();
+            }
+            
             switch(event.key.toLowerCase()) {
                 case 'w':
                     this.controls.forward = true;
+                    if (this.debug) console.log("Forward pressed");
                     break;
                 case 's':
                     this.controls.backward = true;
+                    if (this.debug) console.log("Backward pressed");
                     break;
                 case 'a':
                     this.controls.left = true;
+                    if (this.debug) console.log("Left pressed");
                     break;
                 case 'd':
                     this.controls.right = true;
+                    if (this.debug) console.log("Right pressed");
                     break;
                 case ' ':
                     this.controls.jump = true;
+                    if (this.debug) console.log("Jump pressed");
                     break;
                 case 'shift':
                     this.controls.run = true;
                     this.isRunning = true;
+                    if (this.debug) console.log("Run pressed");
                     break;
             }
         });
@@ -99,22 +118,28 @@ class Player {
             switch(event.key.toLowerCase()) {
                 case 'w':
                     this.controls.forward = false;
+                    if (this.debug) console.log("Forward released");
                     break;
                 case 's':
                     this.controls.backward = false;
+                    if (this.debug) console.log("Backward released");
                     break;
                 case 'a':
                     this.controls.left = false;
+                    if (this.debug) console.log("Left released");
                     break;
                 case 'd':
                     this.controls.right = false;
+                    if (this.debug) console.log("Right released");
                     break;
                 case ' ':
                     this.controls.jump = false;
+                    if (this.debug) console.log("Jump released");
                     break;
                 case 'shift':
                     this.controls.run = false;
                     this.isRunning = false;
+                    if (this.debug) console.log("Run released");
                     break;
             }
         });
@@ -209,13 +234,29 @@ class Player {
         
         // Apply movement with acceleration/deceleration
         if (moveX !== 0 || moveZ !== 0) {
-            // Calculate target velocity
-            const targetVelocityX = (moveX * Math.cos(angle) + moveZ * Math.sin(angle)) * currentSpeed;
-            const targetVelocityZ = (moveZ * Math.cos(angle) - moveX * Math.sin(angle)) * currentSpeed;
+            // Calculate target velocity - fixed direction calculation
+            let targetVelocityX = 0;
+            let targetVelocityZ = 0;
+            
+            // Forward/backward movement (aligned with camera)
+            if (moveZ !== 0) {
+                targetVelocityX += -Math.sin(angle) * moveZ * currentSpeed;
+                targetVelocityZ += -Math.cos(angle) * moveZ * currentSpeed;
+            }
+            
+            // Left/right movement (perpendicular to camera)
+            if (moveX !== 0) {
+                targetVelocityX += Math.cos(angle) * moveX * currentSpeed;
+                targetVelocityZ += -Math.sin(angle) * moveX * currentSpeed;
+            }
             
             // Smoothly interpolate current velocity toward target
             this.velocity.x = this.velocity.x * 0.8 + targetVelocityX * 0.2;
             this.velocity.z = this.velocity.z * 0.8 + targetVelocityZ * 0.2;
+            
+            if (this.debug) {
+                console.log("Moving with velocity:", this.velocity);
+            }
         } else {
             // Apply friction to slow down when not actively moving
             this.velocity.x *= this.friction;
@@ -239,8 +280,8 @@ class Player {
         // Then update Y position separately
         this.position.y += this.velocity.y;
         
-        // Check for vertical collisions
-        this.handleCollisions(prevPosition);
+        // Check for vertical collisions and ground detection
+        this.checkGroundAndCollisions(prevPosition);
         
         // Apply head bobbing effect when moving
         this.applyHeadBobbing();
@@ -265,6 +306,11 @@ class Player {
         
         // Create footstep particles when moving on ground
         this.createFootstepEffects();
+        
+        // Debug output
+        if (this.debug) {
+            console.log("Position:", this.position, "OnGround:", this.onGround);
+        }
     }
     
     /**
@@ -685,6 +731,44 @@ class Player {
         } catch (error) {
             console.error('Error removing block:', error);
             return false;
+        }
+    }
+
+    /**
+     * Check for ground beneath player and handle vertical collisions
+     */
+    checkGroundAndCollisions(prevPosition) {
+        // Reset ground state
+        this.onGround = false;
+        
+        // Check directly below player first (faster than full collision check)
+        for (let offsetX = -0.3; offsetX <= 0.3; offsetX += 0.3) {
+            for (let offsetZ = -0.3; offsetZ <= 0.3; offsetZ += 0.3) {
+                const groundCheckPos = {
+                    x: this.position.x + offsetX,
+                    y: this.position.y - this.height / 2 - 0.01, // Just below feet
+                    z: this.position.z + offsetZ
+                };
+                
+                const blockBelowPlayer = this.world.getBlock(groundCheckPos);
+                if (blockBelowPlayer) {
+                    this.onGround = true;
+                    // Ensure player is exactly on top of the block
+                    this.position.y = Math.floor(groundCheckPos.y) + 0.5 + this.height / 2;
+                    this.velocity.y = 0;
+                    return; // Exit early if we found ground
+                }
+            }
+        }
+        
+        // If we didn't find ground with the quick check, do full collision detection
+        this.handleCollisions(prevPosition);
+        
+        // Simple ground collision as fallback
+        if (this.position.y < this.height / 2) {
+            this.position.y = this.height / 2;
+            this.velocity.y = 0;
+            this.onGround = true;
         }
     }
 }
