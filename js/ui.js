@@ -280,9 +280,19 @@ class UI {
                 <li><strong>Space</strong> - Jump</li>
                 <li><strong>Left Click</strong> - Break block</li>
                 <li><strong>Right Click</strong> - Place block</li>
-                <li><strong>1, 2, 3</strong> - Select block type</li>
+                <li><strong>1-7</strong> - Select block type</li>
                 <li><strong>ESC</strong> - Pause game</li>
                 <li><strong>Click</strong> - Lock/unlock mouse</li>
+            </ul>
+            <h3>Blocks</h3>
+            <ul>
+                <li><strong>1</strong> - Grass</li>
+                <li><strong>2</strong> - Dirt</li>
+                <li><strong>3</strong> - Stone</li>
+                <li><strong>4</strong> - Wood</li>
+                <li><strong>5</strong> - Leaves</li>
+                <li><strong>6</strong> - Sand</li>
+                <li><strong>7</strong> - Glass</li>
             </ul>
         `;
         
