@@ -33,44 +33,80 @@ class Game {
      * Initialize the game
      */
     init() {
-        // Create a scene
+        // Get canvas element
+        this.canvas = document.getElementById('game-canvas') || document.createElement('canvas');
+        this.canvas.id = 'game-canvas';
+        
+        // Create Three.js scene
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0x87CEEB); // Sky blue background
         
-        // Create a camera
-        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        // Create camera
+        this.camera = new THREE.PerspectiveCamera(
+            75, // Field of view
+            window.innerWidth / window.innerHeight, // Aspect ratio
+            0.1, // Near clipping plane
+            1000 // Far clipping plane
+        );
         
-        // Create a renderer
-        this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        // Create renderer
+        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(this.renderer.domElement);
+        this.renderer.setPixelRatio(window.devicePixelRatio);
+        if (!document.getElementById('game-canvas')) {
+            document.body.appendChild(this.renderer.domElement);
+        }
         
-        // Add lights
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-        this.scene.add(ambientLight);
+        // Add lighting
+        this.setupLighting();
         
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6);
-        directionalLight.position.set(10, 20, 10);
-        this.scene.add(directionalLight);
-        
-        // Create the world
+        // Create world
         this.world = new World({ width: 32, height: 32, depth: 32 }); // Increased world size
         this.world.init(this.scene);
+        
+        // Generate flat world
         this.world.generateFlatWorld();
         
-        // Create the player
+        // Create player
         this.player = new Player(this.camera, this.world);
         this.player.init();
         
-        // Create the UI
+        // Create UI
         this.ui = new UI(this);
         this.ui.init();
         
-        // Setup event listeners
+        // Set up event listeners
         this.setupEventListeners();
         
-        // Start the game loop
+        // Handle window resize
+        window.addEventListener('resize', () => this.handleResize());
+        
+        // Start game loop
+        this.isRunning = true;
         this.gameLoop();
+    }
+
+    /**
+     * Set up lighting for the scene
+     */
+    setupLighting() {
+        // Add ambient light
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        this.scene.add(ambientLight);
+        
+        // Add directional light (sun)
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6);
+        directionalLight.position.set(10, 20, 10);
+        this.scene.add(directionalLight);
+    }
+
+    /**
+     * Handle window resize
+     */
+    handleResize() {
+        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
     /**
