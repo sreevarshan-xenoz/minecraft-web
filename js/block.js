@@ -47,6 +47,34 @@ class Block {
                 materials = Array(6).fill(new THREE.MeshBasicMaterial({ map: stoneTexture }));
                 break;
                 
+            case 'wood':
+                const woodTexture = new THREE.TextureLoader().load('textures/wood.svg');
+                materials = Array(6).fill(new THREE.MeshBasicMaterial({ map: woodTexture }));
+                break;
+                
+            case 'leaves':
+                const leavesTexture = new THREE.TextureLoader().load('textures/leaves.svg');
+                materials = Array(6).fill(new THREE.MeshBasicMaterial({ 
+                    map: leavesTexture,
+                    transparent: true,
+                    opacity: 0.9
+                }));
+                break;
+                
+            case 'sand':
+                const sandTexture = new THREE.TextureLoader().load('textures/sand.svg');
+                materials = Array(6).fill(new THREE.MeshBasicMaterial({ map: sandTexture }));
+                break;
+                
+            case 'glass':
+                const glassTexture = new THREE.TextureLoader().load('textures/glass.svg');
+                materials = Array(6).fill(new THREE.MeshBasicMaterial({ 
+                    map: glassTexture,
+                    transparent: true,
+                    opacity: 0.6
+                }));
+                break;
+                
             default:
                 // Default is a simple colored cube
                 materials = Array(6).fill(new THREE.MeshBasicMaterial({ color: 0xAAAAAA }));

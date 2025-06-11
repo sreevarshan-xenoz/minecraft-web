@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="100" height="100" fill="#8B4513"/>
+  
+  <!-- Wood grain -->
+  <rect x="10" y="0" width="5" height="100" fill="#6B3100" opacity="0.7"/>
+  <rect x="30" y="0" width="7" height="100" fill="#6B3100" opacity="0.6"/>
+  <rect x="50" y="0" width="4" height="100" fill="#6B3100" opacity="0.8"/>
+  <rect x="70" y="0" width="6" height="100" fill="#6B3100" opacity="0.7"/>
+  <rect x="85" y="0" width="3" height="100" fill="#6B3100" opacity="0.6"/>
+  
+  <!-- Knots -->
+  <circle cx="25" cy="30" r="8" fill="#5D2906"/>
+  <circle cx="75" cy="70" r="6" fill="#5D2906"/>
+  
+  <!-- Subtle texture -->
+  <filter id="noise" x="0%" y="0%" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="3" stitchTiles="stitch"/>
+    <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.1 0"/>
+    <feBlend mode="multiply" in2="SourceGraphic" result="monoNoise"/>
+  </filter>
+  
+  <rect width="100" height="100" filter="url(#noise)" opacity="0.2"/>
+</svg> 

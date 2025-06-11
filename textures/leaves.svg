@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="100" height="100" fill="#2E8B57"/>
+  
+  <!-- Leaf patterns -->
+  <circle cx="20" cy="20" r="15" fill="#3CB371" opacity="0.7"/>
+  <circle cx="50" cy="30" r="18" fill="#3CB371" opacity="0.6"/>
+  <circle cx="80" cy="25" r="12" fill="#3CB371" opacity="0.8"/>
+  <circle cx="25" cy="60" r="14" fill="#3CB371" opacity="0.7"/>
+  <circle cx="60" cy="70" r="16" fill="#3CB371" opacity="0.6"/>
+  <circle cx="85" cy="80" r="13" fill="#3CB371" opacity="0.8"/>
+  
+  <!-- Darker spots -->
+  <circle cx="30" cy="40" r="5" fill="#1D6D42" opacity="0.4"/>
+  <circle cx="70" cy="50" r="7" fill="#1D6D42" opacity="0.4"/>
+  <circle cx="40" cy="80" r="6" fill="#1D6D42" opacity="0.4"/>
+  
+  <!-- Subtle texture -->
+  <filter id="noise" x="0%" y="0%" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/>
+    <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.1 0"/>
+    <feBlend mode="multiply" in2="SourceGraphic" result="monoNoise"/>
+  </filter>
+  
+  <rect width="100" height="100" filter="url(#noise)" opacity="0.3"/>
+</svg> 

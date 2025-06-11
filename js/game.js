@@ -147,6 +147,26 @@ class Game {
                     this.ui.updateBlockSelector();
                     this.ui.showMessage('Selected: Stone', 1000);
                     break;
+                case '4':
+                    this.selectedBlockType = 'wood';
+                    this.ui.updateBlockSelector();
+                    this.ui.showMessage('Selected: Wood', 1000);
+                    break;
+                case '5':
+                    this.selectedBlockType = 'leaves';
+                    this.ui.updateBlockSelector();
+                    this.ui.showMessage('Selected: Leaves', 1000);
+                    break;
+                case '6':
+                    this.selectedBlockType = 'sand';
+                    this.ui.updateBlockSelector();
+                    this.ui.showMessage('Selected: Sand', 1000);
+                    break;
+                case '7':
+                    this.selectedBlockType = 'glass';
+                    this.ui.updateBlockSelector();
+                    this.ui.showMessage('Selected: Glass', 1000);
+                    break;
             }
         });
         

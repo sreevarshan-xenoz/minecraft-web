@@ -211,7 +211,11 @@ class UI {
         const blockTypes = [
             { type: 'grass', key: '1' },
             { type: 'dirt', key: '2' },
-            { type: 'stone', key: '3' }
+            { type: 'stone', key: '3' },
+            { type: 'wood', key: '4' },
+            { type: 'leaves', key: '5' },
+            { type: 'sand', key: '6' },
+            { type: 'glass', key: '7' }
         ];
         
         blockTypes.forEach(block => {
